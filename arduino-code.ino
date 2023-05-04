@@ -1,5 +1,7 @@
 #include <Keypad.h>
 #include <LiquidCrystal_I2C.h>
+
+#pragma region GLOBAL_VAR
 //leds
 int led1=13;
 
@@ -11,7 +13,7 @@ int ScaledAnalogPinPir2=0;
 
 //piezo
 int piezo=12;
-bool valorTeclado=false;
+int is_Piezo_On = false;
 
 //sensor Sonido
 int pinDesencadenador=2; //trig emite onda de sonido
@@ -22,6 +24,7 @@ char codigo[4];
 int opc=0;
 int cont=0;
 
+int IS_SYSTEM_ON = false; 
 
 //---Teclado
 const byte ROWS = 4; //filas
@@ -42,6 +45,7 @@ byte i=0;
 //porcion de memoria, cantidad de caracteres, cantidad de lineas
 LiquidCrystal_I2C lcd(34, 16, 2);
 
+#pragma endregion GLOBAL_VAR
 
 void setup()
 {
@@ -62,19 +66,30 @@ void setup()
 	for( i=0;i<8;i++){
 		pinMode(i,OUTPUT);
 	}
+
+	keypad.addEventListener(KeyInstructionsEvent);
+	menu();
 }
 
 void loop()
 {
 
-	//menu();
-	
-	//pir1 and pir2
-	Pirs_Working();
-	
+	char key = keypad.getKey();
 
-	//sensor sonido
-	Ultrasound_Working();
+	if (key) {
+		Serial.println(key);
+		TurnOffAlarmByPass(key);
+	}
+	
+	if (IS_SYSTEM_ON){
+		//pir1 and pir2
+		Pirs_Working();
+		//sensor sonido
+		Ultrasound_Working();
+		//Piezo loud
+		Piezo_Working();
+	}
+	
   
 	//tecla presionada
 	// char pulsacion=keypad.getKey();
@@ -89,24 +104,7 @@ void loop()
 	// }
 	
 	// if (pulsacion != NO_KEY){
-	// 	codigo[cont]=pulsacion;
-	// 	Serial.print(codigo[cont]);
-	// 	cont++;
-	// 	if(cont==4){
-	// 	if(codigo[0]==clave[0]&&codigo[1]==clave[1]&&codigo[2]==clave[2]&&codigo[3]==clave[3]){
-	// 		Serial.println("Clave correcta");
-	// 		lcd.setCursor(0,1);
-	// 		lcd.print("Clave correcta");
-	// 		delay(10);
-	// 	}
-	// 	else{
-	// 		Serial.println("Clave Incorrecta");
-	// 		lcd.setCursor(0,1);
-	// 		lcd.print("Clave Incorrecta");
-	// 		delay(10);
-	// 	}
-	// 	cont=0;
-	// 	}
+	
 	// }
 }
 
@@ -139,10 +137,10 @@ void Ultrasound_Working(){
 
 	pinMode(pinDesencadenador, OUTPUT);  
 	digitalWrite(pinDesencadenador, LOW);
-	delayMicroseconds(2);
+	delay(2);
 	// Establece el pin de activación en estado ALTO durante 10 microsegundos
 	digitalWrite(pinDesencadenador, HIGH);
-	delayMicroseconds(10);
+	delay(10);
 	digitalWrite(pinDesencadenador, LOW);
 	pinMode(pinEco, INPUT);
 	// Lee el pin de eco y devuelve el tiempo de viaje de la onda de sonido en microsegundos * 0.01723
@@ -151,7 +149,7 @@ void Ultrasound_Working(){
 
 	if(distancia<130){//120cm
 		digitalWrite(led1,HIGH);
-		tone(piezo, 523,200);
+		is_Piezo_On = true;
 		Serial.println("sonido Detectado");
 	}
 	else{
@@ -171,10 +169,57 @@ void Pirs_Working(){
 		Serial.println("Movimiento Detectado");
 		Serial.println(ScaledAnalogPinPir1);
 		digitalWrite(led1, HIGH);
-		tone(piezo, 523,200);
+		is_Piezo_On = true;
 	}
 	else{
 		digitalWrite(led1, LOW);
 		noTone(piezo);
 	}
+}
+
+void Piezo_Working(){
+	if (is_Piezo_On)
+		tone(piezo, 523,200);
+}
+
+//KeyInstructionsEvent: That means that pressing a key will execute a function or change a variable value
+void KeyInstructionsEvent(char key){
+	switch (keypad.getState()){
+    case PRESSED:
+		
+		switch (key){
+
+			case '1': IS_SYSTEM_ON = true ; break;
+
+		}
+  	}
+}
+
+void TurnOffAlarmByPass(char key){
+
+	static int cont = 0;
+
+	if (!is_Piezo_On)
+		return;
+	
+	codigo[cont]=key;
+	Serial.print(codigo[cont]);
+	cont++;
+	if(cont==4){
+		if(codigo[0]==clave[0]&&codigo[1]==clave[1]&&codigo[2]==clave[2]&&codigo[3]==clave[3]){
+			Serial.println("Clave correcta");
+			lcd.setCursor(0,1);
+			lcd.print("Clave correcta");
+			IS_SYSTEM_ON = false;
+			delay(10);
+		}
+		else{
+			Serial.println("Clave Incorrecta");
+			lcd.setCursor(0,1);
+			lcd.print("Clave Incorrecta");
+			delay(10);
+		}
+		cont=0;
+	}
+	
 }
