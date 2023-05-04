@@ -69,7 +69,55 @@ void loop()
 {
   //pir1
   char pulsacion= keypad.getKey();
+
+  menu()
   
+  //pir1
+  a=analogRead(A0);
+  b=map(a,0,1023,0,255);
+  //pir2
+  c=analogRead(A1);
+  d=map(c,0,1023,0,255);
+
+ //sensor sonido
+  digitalWrite(pinDesencadenador,HIGH);
+  delay(1);//emite 1 pulso
+  digitalWrite(pinDesencadenador,LOW);
+  tiempoSonido=pulseIn(pinEco, HIGH);
+  distanciaSonido=tiempoSonido/52.8;
+  
+  //tecla presionada
+  char pulsacion=keypad.getKey();
+  if(pulsacion){
+   	lcd.clear();
+    lcd.print("Opcion:");
+    lcd.setCursor(0,1);
+    lcd.print(pulsacion);
+    Serial.print("Tecla");
+    Serial.println(pulsacion);
+
+  }
+  if(b>100||d>100){
+     Serial.println("Movimiento Detectado");
+     Serial.println(b);
+     digitalWrite(led1, HIGH);
+     tone(piezo, 523,200);
+
+  }
+  else{
+    digitalWrite(led1, LOW);
+    noTone(piezo);
+  }
+  
+  if(distanciaSonido<130){//120cm
+    digitalWrite(led1,HIGH);
+    tone(piezo, 523,200);
+    Serial.println("sonido Detectado");
+  }
+  else{
+     digitalWrite(led1,LOW);
+     noTone(piezo);
+  }
  
   if (pulsacion != NO_KEY){
   	codigo[cont]=pulsacion;
@@ -93,8 +141,6 @@ void loop()
   }
 }
 
-
-
 void menu(){
   lcd.setCursor(0,0);
   lcd.print("Elige una opcion");
@@ -104,7 +150,7 @@ void menu(){
   lcd.clear();
   
   lcd.setCursor(0,0);
-  lcd.print("2 1/2 alarma");
+  lcd.print("2 1/2 alarma"); //REMOVE
   lcd.setCursor(0,1);
   lcd.print("3 Cambiar clave");
   delay(200);
@@ -116,5 +162,4 @@ void menu(){
   lcd.print(">>> ");
   delay(200);
   lcd.clear();
-
 }
