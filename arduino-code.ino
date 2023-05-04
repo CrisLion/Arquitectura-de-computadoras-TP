@@ -67,99 +67,103 @@ void setup()
 
 void loop()
 {
-  //pir1
-  char pulsacion= keypad.getKey();
 
-  menu()
+	menu();
+	
+	//pir1
+	a=analogRead(A0);
+	b=map(a,0,1023,0,255);
+	//pir2
+	c=analogRead(A1);
+	d=map(c,0,1023,0,255);
+
+	//sensor sonido
+	Ultrasound_Working();
   
-  //pir1
-  a=analogRead(A0);
-  b=map(a,0,1023,0,255);
-  //pir2
-  c=analogRead(A1);
-  d=map(c,0,1023,0,255);
+	//tecla presionada
+	char pulsacion=keypad.getKey();
+	if(pulsacion){
+		lcd.clear();
+		lcd.print("Opcion:");
+		lcd.setCursor(0,1);
+		lcd.print(pulsacion);
+		Serial.print("Tecla");
+		Serial.println(pulsacion);
 
- //sensor sonido
-  digitalWrite(pinDesencadenador,HIGH);
-  delay(1);//emite 1 pulso
-  digitalWrite(pinDesencadenador,LOW);
-  tiempoSonido=pulseIn(pinEco, HIGH);
-  distanciaSonido=tiempoSonido/52.8;
-  
-  //tecla presionada
-  char pulsacion=keypad.getKey();
-  if(pulsacion){
-   	lcd.clear();
-    lcd.print("Opcion:");
-    lcd.setCursor(0,1);
-    lcd.print(pulsacion);
-    Serial.print("Tecla");
-    Serial.println(pulsacion);
+	}
+	if(b>100||d>100){
+		Serial.println("Movimiento Detectado");
+		Serial.println(b);
+		digitalWrite(led1, HIGH);
+		tone(piezo, 523,200);
 
-  }
-  if(b>100||d>100){
-     Serial.println("Movimiento Detectado");
-     Serial.println(b);
-     digitalWrite(led1, HIGH);
-     tone(piezo, 523,200);
-
-  }
-  else{
-    digitalWrite(led1, LOW);
-    noTone(piezo);
-  }
-  
-  if(distanciaSonido<130){//120cm
-    digitalWrite(led1,HIGH);
-    tone(piezo, 523,200);
-    Serial.println("sonido Detectado");
-  }
-  else{
-     digitalWrite(led1,LOW);
-     noTone(piezo);
-  }
- 
-  if (pulsacion != NO_KEY){
-  	codigo[cont]=pulsacion;
-    Serial.print(codigo[cont]);
-    cont++;
-    if(cont==4){
-      if(codigo[0]==clave[0]&&codigo[1]==clave[1]&&codigo[2]==clave[2]&&codigo[3]==clave[3]){
-      	Serial.println("Clave correcta");
-        lcd.setCursor(0,1);
-        lcd.print("Clave correcta");
-        delay(10);
-      }
-      else{
-       	 Serial.println("Clave Incorrecta");
-        lcd.setCursor(0,1);
-        lcd.print("Clave Incorrecta");
-        delay(10);
-      }
-      cont=0;
-    }
-  }
+	}
+	else{
+		digitalWrite(led1, LOW);
+		noTone(piezo);
+	}
+	
+	
+	if (pulsacion != NO_KEY){
+		codigo[cont]=pulsacion;
+		Serial.print(codigo[cont]);
+		cont++;
+		if(cont==4){
+		if(codigo[0]==clave[0]&&codigo[1]==clave[1]&&codigo[2]==clave[2]&&codigo[3]==clave[3]){
+			Serial.println("Clave correcta");
+			lcd.setCursor(0,1);
+			lcd.print("Clave correcta");
+			delay(10);
+		}
+		else{
+			Serial.println("Clave Incorrecta");
+			lcd.setCursor(0,1);
+			lcd.print("Clave Incorrecta");
+			delay(10);
+		}
+		cont=0;
+		}
+	}
 }
 
 void menu(){
-  lcd.setCursor(0,0);
-  lcd.print("Elige una opcion");
-  lcd.setCursor(0,1);
-  lcd.print("1 Encender alarma");
-  delay(200);
-  lcd.clear();
-  
-  lcd.setCursor(0,0);
-  lcd.print("2 1/2 alarma"); //REMOVE
-  lcd.setCursor(0,1);
-  lcd.print("3 Cambiar clave");
-  delay(200);
-  lcd.clear();
+	lcd.setCursor(0,0);
+	lcd.print("Elige una opcion");
+	lcd.setCursor(0,1);
+	lcd.print("1 Encender alarma");
+	delay(200);
+	lcd.clear();
+	
+	lcd.setCursor(0,0);
+	lcd.print("2 1/2 alarma"); //REMOVE
+	lcd.setCursor(0,1);
+	lcd.print("3 Cambiar clave");
+	delay(200);
+	lcd.clear();
 
-  lcd.setCursor(0,0);
-  lcd.print("4 Apagar Alarma ");
-  lcd.setCursor(0,1);
-  lcd.print(">>> ");
-  delay(200);
-  lcd.clear();
+	lcd.setCursor(0,0);
+	lcd.print("4 Apagar Alarma ");
+	lcd.setCursor(0,1);
+	lcd.print(">>> ");
+	delay(200);
+	lcd.clear();
+}
+
+void Ultrasound_Working(){
+
+	digitalWrite(pinDesencadenador,HIGH);
+	delay(1);//emite 1 pulso
+	digitalWrite(pinDesencadenador,LOW);
+	tiempoSonido=pulseIn(pinEco, HIGH);
+	distanciaSonido=tiempoSonido/52.8;
+
+	if(distanciaSonido<130){//120cm
+		digitalWrite(led1,HIGH);
+		tone(piezo, 523,200);
+		Serial.println("sonido Detectado");
+	}
+	else{
+		digitalWrite(led1,LOW);
+		noTone(piezo);
+	}
 }
