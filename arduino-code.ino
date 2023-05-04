@@ -4,10 +4,10 @@
 int led1=13;
 
 //pirs
-int a=0;
-int b=0;
-int c=0;
-int d=0;
+int AnalogPinPir1=0;
+int ScaledAnalogPinPir1=0;
+int AnalogPinPir2=0;
+int ScaledAnalogPinPir2=0;
 
 //piezo
 int piezo=12;
@@ -17,8 +17,6 @@ bool valorTeclado=false;
 int pinDesencadenador=2; //trig emite onda de sonido
 int pinEco=3; // recibe la onda de sonido
 
-float tiempoSonido=0;
-float distanciaSonido=0;
 char clave[]="1245";
 char codigo[4];
 int opc=0;
@@ -47,83 +45,69 @@ LiquidCrystal_I2C lcd(34, 16, 2);
 
 void setup()
 {
-  Serial.begin(9600);
-  pinMode(led1, OUTPUT);
-//piezo
-  pinMode(piezo,OUTPUT);
+	Serial.begin(9600);
+	pinMode(led1, OUTPUT);
+	//piezo
+	pinMode(piezo,OUTPUT);
 
-  pinMode(pinEco,INPUT);
-  pinMode(pinDesencadenador, OUTPUT);
-   //pantalla
-  lcd.init(); //se inicializa
-  lcd.backlight(); //para que se prenda
+	pinMode(pinEco,INPUT);
+	pinMode(pinDesencadenador, OUTPUT);
+	digitalWrite(pinDesencadenador,LOW);
+	//pantalla
+	lcd.init(); //se inicializa
+	lcd.backlight(); //para que se prenda
 
-  //teclado
-  Serial.println("Teclado 4x4");
-  for( i=0;i<8;i++){
-  	pinMode(i,OUTPUT);
-  }
+	//teclado
+	Serial.println("Teclado 4x4");
+	for( i=0;i<8;i++){
+		pinMode(i,OUTPUT);
+	}
 }
 
 void loop()
 {
 
-	menu();
+	//menu();
 	
-	//pir1
-	a=analogRead(A0);
-	b=map(a,0,1023,0,255);
-	//pir2
-	c=analogRead(A1);
-	d=map(c,0,1023,0,255);
+	//pir1 and pir2
+	Pirs_Working();
+	
 
 	//sensor sonido
 	Ultrasound_Working();
   
 	//tecla presionada
-	char pulsacion=keypad.getKey();
-	if(pulsacion){
-		lcd.clear();
-		lcd.print("Opcion:");
-		lcd.setCursor(0,1);
-		lcd.print(pulsacion);
-		Serial.print("Tecla");
-		Serial.println(pulsacion);
+	// char pulsacion=keypad.getKey();
+	// if(pulsacion){
+	// 	lcd.clear();
+	// 	lcd.print("Opcion:");
+	// 	lcd.setCursor(0,1);
+	// 	lcd.print(pulsacion);
+	// 	Serial.print("Tecla");
+	// 	Serial.println(pulsacion);
 
-	}
-	if(b>100||d>100){
-		Serial.println("Movimiento Detectado");
-		Serial.println(b);
-		digitalWrite(led1, HIGH);
-		tone(piezo, 523,200);
-
-	}
-	else{
-		digitalWrite(led1, LOW);
-		noTone(piezo);
-	}
+	// }
 	
-	
-	if (pulsacion != NO_KEY){
-		codigo[cont]=pulsacion;
-		Serial.print(codigo[cont]);
-		cont++;
-		if(cont==4){
-		if(codigo[0]==clave[0]&&codigo[1]==clave[1]&&codigo[2]==clave[2]&&codigo[3]==clave[3]){
-			Serial.println("Clave correcta");
-			lcd.setCursor(0,1);
-			lcd.print("Clave correcta");
-			delay(10);
-		}
-		else{
-			Serial.println("Clave Incorrecta");
-			lcd.setCursor(0,1);
-			lcd.print("Clave Incorrecta");
-			delay(10);
-		}
-		cont=0;
-		}
-	}
+	// if (pulsacion != NO_KEY){
+	// 	codigo[cont]=pulsacion;
+	// 	Serial.print(codigo[cont]);
+	// 	cont++;
+	// 	if(cont==4){
+	// 	if(codigo[0]==clave[0]&&codigo[1]==clave[1]&&codigo[2]==clave[2]&&codigo[3]==clave[3]){
+	// 		Serial.println("Clave correcta");
+	// 		lcd.setCursor(0,1);
+	// 		lcd.print("Clave correcta");
+	// 		delay(10);
+	// 	}
+	// 	else{
+	// 		Serial.println("Clave Incorrecta");
+	// 		lcd.setCursor(0,1);
+	// 		lcd.print("Clave Incorrecta");
+	// 		delay(10);
+	// 	}
+	// 	cont=0;
+	// 	}
+	// }
 }
 
 void menu(){
@@ -151,19 +135,46 @@ void menu(){
 
 void Ultrasound_Working(){
 
-	digitalWrite(pinDesencadenador,HIGH);
-	delay(1);//emite 1 pulso
-	digitalWrite(pinDesencadenador,LOW);
-	tiempoSonido=pulseIn(pinEco, HIGH);
-	distanciaSonido=tiempoSonido/52.8;
+	short distancia;
 
-	if(distanciaSonido<130){//120cm
+	pinMode(pinDesencadenador, OUTPUT);  
+	digitalWrite(pinDesencadenador, LOW);
+	delayMicroseconds(2);
+	// Establece el pin de activación en estado ALTO durante 10 microsegundos
+	digitalWrite(pinDesencadenador, HIGH);
+	delayMicroseconds(10);
+	digitalWrite(pinDesencadenador, LOW);
+	pinMode(pinEco, INPUT);
+	// Lee el pin de eco y devuelve el tiempo de viaje de la onda de sonido en microsegundos * 0.01723
+	distancia = pulseIn(pinEco, HIGH)*0.01723;
+	Serial.println(distancia);
+
+	if(distancia<130){//120cm
 		digitalWrite(led1,HIGH);
 		tone(piezo, 523,200);
 		Serial.println("sonido Detectado");
 	}
 	else{
 		digitalWrite(led1,LOW);
+		noTone(piezo);
+	}
+}
+
+void Pirs_Working(){
+	AnalogPinPir1=analogRead(A0);
+	ScaledAnalogPinPir1=map(AnalogPinPir1,0,1023,0,255);
+	//pir2
+	AnalogPinPir2=analogRead(A1);
+	ScaledAnalogPinPir2=map(AnalogPinPir2,0,1023,0,255);
+
+	if(ScaledAnalogPinPir1>100||ScaledAnalogPinPir2>100){
+		Serial.println("Movimiento Detectado");
+		Serial.println(ScaledAnalogPinPir1);
+		digitalWrite(led1, HIGH);
+		tone(piezo, 523,200);
+	}
+	else{
+		digitalWrite(led1, LOW);
 		noTone(piezo);
 	}
 }
