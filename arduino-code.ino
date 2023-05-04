@@ -67,7 +67,7 @@ void setup()
 		pinMode(i,OUTPUT);
 	}
 
-	keypad.addEventListener(Key_instructions);
+	keypad.addEventListener(KeyInstructionsEvent);
 	menu();
 }
 
@@ -78,6 +78,7 @@ void loop()
 
 	if (key) {
 		Serial.println(key);
+		TurnOffAlarmByPass(key);
 	}
 	
 	if (IS_SYSTEM_ON){
@@ -103,24 +104,7 @@ void loop()
 	// }
 	
 	// if (pulsacion != NO_KEY){
-	// 	codigo[cont]=pulsacion;
-	// 	Serial.print(codigo[cont]);
-	// 	cont++;
-	// 	if(cont==4){
-	// 	if(codigo[0]==clave[0]&&codigo[1]==clave[1]&&codigo[2]==clave[2]&&codigo[3]==clave[3]){
-	// 		Serial.println("Clave correcta");
-	// 		lcd.setCursor(0,1);
-	// 		lcd.print("Clave correcta");
-	// 		delay(10);
-	// 	}
-	// 	else{
-	// 		Serial.println("Clave Incorrecta");
-	// 		lcd.setCursor(0,1);
-	// 		lcd.print("Clave Incorrecta");
-	// 		delay(10);
-	// 	}
-	// 	cont=0;
-	// 	}
+	
 	// }
 }
 
@@ -153,10 +137,10 @@ void Ultrasound_Working(){
 
 	pinMode(pinDesencadenador, OUTPUT);  
 	digitalWrite(pinDesencadenador, LOW);
-	delayMicroseconds(2);
+	delay(2);
 	// Establece el pin de activación en estado ALTO durante 10 microsegundos
 	digitalWrite(pinDesencadenador, HIGH);
-	delayMicroseconds(10);
+	delay(10);
 	digitalWrite(pinDesencadenador, LOW);
 	pinMode(pinEco, INPUT);
 	// Lee el pin de eco y devuelve el tiempo de viaje de la onda de sonido en microsegundos * 0.01723
@@ -198,8 +182,8 @@ void Piezo_Working(){
 		tone(piezo, 523,200);
 }
 
-//Key_instructions: That means that pressing a key will execute a function or change a variable value
-void Key_instructions(char key){
+//KeyInstructionsEvent: That means that pressing a key will execute a function or change a variable value
+void KeyInstructionsEvent(char key){
 	switch (keypad.getState()){
     case PRESSED:
 		
@@ -209,4 +193,33 @@ void Key_instructions(char key){
 
 		}
   	}
+}
+
+void TurnOffAlarmByPass(char key){
+
+	static int cont = 0;
+
+	if (!is_Piezo_On)
+		return;
+	
+	codigo[cont]=key;
+	Serial.print(codigo[cont]);
+	cont++;
+	if(cont==4){
+		if(codigo[0]==clave[0]&&codigo[1]==clave[1]&&codigo[2]==clave[2]&&codigo[3]==clave[3]){
+			Serial.println("Clave correcta");
+			lcd.setCursor(0,1);
+			lcd.print("Clave correcta");
+			IS_SYSTEM_ON = false;
+			delay(10);
+		}
+		else{
+			Serial.println("Clave Incorrecta");
+			lcd.setCursor(0,1);
+			lcd.print("Clave Incorrecta");
+			delay(10);
+		}
+		cont=0;
+	}
+	
 }
