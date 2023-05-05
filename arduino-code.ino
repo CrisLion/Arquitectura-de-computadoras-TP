@@ -145,7 +145,6 @@ void Ultrasound_Working(){
 	pinMode(pinEco, INPUT);
 	// Lee el pin de eco y devuelve el tiempo de viaje de la onda de sonido en microsegundos * 0.01723
 	distancia = pulseIn(pinEco, HIGH)*0.01723;
-	Serial.println(distancia);
 
 	if(distancia<130){//120cm
 		digitalWrite(led1,HIGH);
@@ -211,6 +210,7 @@ void TurnOffAlarmByPass(char key){
 			lcd.setCursor(0,1);
 			lcd.print("Clave correcta");
 			IS_SYSTEM_ON = false;
+          	is_Piezo_On = false;
 			delay(10);
 		}
 		else{
